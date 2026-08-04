@@ -3,6 +3,6 @@
   "outputDirectory": "client/dist",
   "installCommand": "npm install",
   "functions": {
-    "api/**/*.js": {}
+    "api/**/*.js": { "maxDuration": 10 }
   }
 }
