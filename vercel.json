@@ -1,8 +1,5 @@
 {
   "buildCommand": "npm run build:client",
   "outputDirectory": "client/dist",
-  "installCommand": "npm install",
-  "functions": {
-    "api/**/*.js": { "maxDuration": 10 }
-  }
+  "installCommand": "npm install"
 }
