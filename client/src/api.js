@@ -29,8 +29,8 @@ export const api = {
     request('/auth/change-password', { method: 'POST', body: JSON.stringify({ newPassword }) }),
 
   getProjects: () => request('/projects'),
-  createProject: (name) => request('/projects', { method: 'POST', body: JSON.stringify({ name }) }),
-  renameProject: (id, name) => request(`/projects/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }),
+  createProject: (fields) => request('/projects', { method: 'POST', body: JSON.stringify(fields) }),
+  updateProject: (id, fields) => request(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(fields) }),
   deleteProject: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
 
   getCards: (projectId) => request(`/projects/${projectId}/cards`),

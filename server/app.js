@@ -65,21 +65,33 @@ app.get('/api/projects', requireAuth, async (req, res) => {
 });
 
 app.post('/api/projects', requireAuth, async (req, res) => {
-  const { name } = req.body;
+  const { name, date, category, deadline, status } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: 'Nama project wajib diisi' });
   const data = await readData();
-  const project = { id: genId('p_'), name: name.trim(), createdAt: new Date().toISOString() };
+  const project = {
+    id: genId('p_'),
+    name: name.trim(),
+    date: date || new Date().toISOString().slice(0, 10),
+    category: category || 'project',
+    deadline: deadline || null,
+    status: status || 'ongoing',
+    createdAt: new Date().toISOString(),
+  };
   data.projects.push(project);
   await writeData(data);
   res.json(project);
 });
 
 app.put('/api/projects/:id', requireAuth, async (req, res) => {
-  const { name } = req.body;
+  const { name, date, category, deadline, status } = req.body;
   const data = await readData();
   const project = data.projects.find((p) => p.id === req.params.id);
   if (!project) return res.status(404).json({ error: 'Project tidak ditemukan' });
   if (name && name.trim()) project.name = name.trim();
+  if (date !== undefined) project.date = date;
+  if (category !== undefined) project.category = category;
+  if (deadline !== undefined) project.deadline = deadline;
+  if (status !== undefined) project.status = status;
   await writeData(data);
   res.json(project);
 });

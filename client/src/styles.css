@@ -249,10 +249,40 @@ body {
 
 textarea.input { resize: none; font-family: inherit; }
 
+/* Filters */
+.filter-bar {
+  display: flex; flex-wrap: wrap; gap: 20px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--card-border);
+  background: rgba(255,255,255,0.4);
+}
+.filter-group { display: flex; flex-direction: column; gap: 6px; }
+.filter-label { font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.03em; }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.filter-chip {
+  font-size: 12px; font-weight: 700;
+  padding: 5px 12px; border-radius: 999px;
+  background: #F7F2FA; color: var(--text-light);
+  border: 1px solid transparent; cursor: pointer;
+}
+.filter-chip.active {
+  background: #EFE0FA; color: var(--accent);
+  border: 1px solid #D9C2F0;
+}
+
+.project-card-badges { display: flex; gap: 6px; margin-bottom: 8px; }
+.badge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+.deadline-text { color: #C96060 !important; }
+.project-card-actions { display: flex; gap: 12px; margin-top: 10px; }
+.link-btn { font-size: 11px; background: none; border: none; cursor: pointer; padding: 0; color: var(--text-mid); font-weight: 700; }
+.link-btn.danger { color: #C96060; }
+
+.field-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-mid); margin-bottom: 6px; }
+
 .loading-text { text-align: center; padding: 60px 0; color: var(--text-light); }
 
-.project-chip {
+/* .project-chip {
   font-size: 10px; font-weight: 700;
   padding: 2px 8px; border-radius: 999px;
   background: #F3ECFA; color: #9C8FA8;
-}
+} */
