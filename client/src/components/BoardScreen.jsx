@@ -150,9 +150,12 @@ export default function BoardScreen({ project, onBack, onLogout }) {
                         >
                           <h4>{card.title}</h4>
                           {card.description && <p>{card.description}</p>}
-                          <span className="priority-chip" style={{ background: p.bg, color: p.color }}>
-                            {p.label}
-                          </span>
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span className="priority-chip" style={{ background: p.bg, color: p.color }}>
+                              {p.label}
+                            </span>
+                            <span className="project-chip">{project.name}</span>
+                          </div>
                         </div>
                       );
                     })}
