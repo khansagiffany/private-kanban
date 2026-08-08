@@ -281,8 +281,8 @@ textarea.input { resize: none; font-family: inherit; }
 
 .loading-text { text-align: center; padding: 60px 0; color: var(--text-light); }
 
-/* .project-chip {
+.project-chip {
   font-size: 10px; font-weight: 700;
   padding: 2px 8px; border-radius: 999px;
   background: #F3ECFA; color: #9C8FA8;
-} */
+}

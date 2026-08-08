@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PRIORITIES } from './BoardScreen.jsx';
+import { PRIORITIES, CATEGORIES, STATUSES } from './BoardScreen.jsx';
 
 export default function CardModal({ card, onSave, onDelete, onClose }) {
   const [form, setForm] = useState(card);
@@ -26,8 +26,16 @@ export default function CardModal({ card, onSave, onDelete, onClose }) {
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
 
+        <label className="field-label">Tanggal</label>
+        <input
+          type="date"
+          className="input"
+          value={form.date || ''}
+          onChange={(e) => setForm({ ...form, date: e.target.value })}
+        />
+
         <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-mid)', margin: '0 0 8px' }}>Prioritas</p>
-        <div className="priority-picker">
+        <div className="priority-picker" style={{ marginBottom: 16 }}>
           {Object.entries(PRIORITIES).map(([key, p]) => (
             <button
               key={key}
@@ -39,6 +47,48 @@ export default function CardModal({ card, onSave, onDelete, onClose }) {
               }}
             >
               {p.label}
+            </button>
+          ))}
+        </div>
+
+        <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-mid)', margin: '0 0 8px' }}>Kategori</p>
+        <div className="priority-picker" style={{ marginBottom: 16 }}>
+          {Object.entries(CATEGORIES).map(([key, c]) => (
+            <button
+              key={key}
+              onClick={() => setForm({ ...form, category: key })}
+              style={{
+                background: form.category === key ? c.bg : '#F7F2FA',
+                color: form.category === key ? c.color : 'var(--text-light)',
+                border: form.category === key ? `1px solid ${c.color}55` : '1px solid transparent',
+              }}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+
+        <label className="field-label">Deadline (opsional)</label>
+        <input
+          type="date"
+          className="input"
+          value={form.deadline || ''}
+          onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+        />
+
+        <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-mid)', margin: '0 0 8px' }}>Status</p>
+        <div className="priority-picker" style={{ marginBottom: 20 }}>
+          {Object.entries(STATUSES).map(([key, s]) => (
+            <button
+              key={key}
+              onClick={() => setForm({ ...form, status: key })}
+              style={{
+                background: form.status === key ? s.bg : '#F7F2FA',
+                color: form.status === key ? s.color : 'var(--text-light)',
+                border: form.status === key ? `1px solid ${s.color}55` : '1px solid transparent',
+              }}
+            >
+              {s.label}
             </button>
           ))}
         </div>

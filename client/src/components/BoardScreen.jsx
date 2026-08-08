@@ -17,11 +17,29 @@ export const PRIORITIES = {
   high: { label: 'High', color: '#C96060', bg: '#FBE3E3' },
 };
 
+export const CATEGORIES = {
+  project: { label: 'Project', color: '#8A6FB0', bg: '#EFE6F8' },
+  product: { label: 'Product', color: '#3E7FA8', bg: '#E1F0FB' },
+  bau: { label: 'BAU', color: '#B9873A', bg: '#FBF0D8' },
+};
+
+export const STATUSES = {
+  ongoing: { label: 'Ongoing', color: '#B9873A', bg: '#FBF0D8' },
+  done: { label: 'Done', color: '#5C9A72', bg: '#E4F4E8' },
+};
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const today = () => new Date().toISOString().slice(0, 10);
+
 export default function BoardScreen({ project, onBack, onLogout }) {
   const [cards, setCards] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [modalCard, setModalCard] = useState(null);
   const [dragId, setDragId] = useState(null);
+
+  const [selectedMonths, setSelectedMonths] = useState(new Set());
+  const [selectedCategories, setSelectedCategories] = useState(new Set());
+  const [selectedStatus, setSelectedStatus] = useState('all'); // all | ongoing | done
 
   useEffect(() => {
     load();
@@ -48,7 +66,16 @@ export default function BoardScreen({ project, onBack, onLogout }) {
   }
 
   function openAddModal(columnId) {
-    setModalCard({ columnId, title: '', description: '', priority: 'medium' });
+    setModalCard({
+      columnId,
+      title: '',
+      description: '',
+      priority: 'medium',
+      date: today(),
+      category: 'project',
+      deadline: '',
+      status: 'ongoing',
+    });
   }
   function openEditModal(card) {
     setModalCard({ ...card });
@@ -103,6 +130,29 @@ export default function BoardScreen({ project, onBack, onLogout }) {
     setDragId(null);
   }
 
+  const availableMonths = Array.from(
+    new Set(cards.map((c) => (c.date || c.createdAt || '').slice(0, 7)).filter(Boolean))
+  ).sort();
+
+  function toggleMonth(key) {
+    const next = new Set(selectedMonths);
+    next.has(key) ? next.delete(key) : next.add(key);
+    setSelectedMonths(next);
+  }
+  function toggleCategory(key) {
+    const next = new Set(selectedCategories);
+    next.has(key) ? next.delete(key) : next.add(key);
+    setSelectedCategories(next);
+  }
+
+  const filteredCards = cards.filter((c) => {
+    const monthKey = (c.date || c.createdAt || '').slice(0, 7);
+    const monthMatch = selectedMonths.size === 0 || selectedMonths.has(monthKey);
+    const categoryMatch = selectedCategories.size === 0 || selectedCategories.has(c.category || 'project');
+    const statusMatch = selectedStatus === 'all' || (c.status || 'ongoing') === selectedStatus;
+    return monthMatch && categoryMatch && statusMatch;
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <div className="topbar">
@@ -113,13 +163,66 @@ export default function BoardScreen({ project, onBack, onLogout }) {
         <button className="btn-ghost" onClick={onLogout}>Keluar</button>
       </div>
 
+      {loaded && cards.length > 0 && (
+        <div className="filter-bar">
+          <div className="filter-group">
+            <span className="filter-label">Bulan</span>
+            <div className="filter-chips">
+              {availableMonths.map((key) => {
+                const [y, m] = key.split('-');
+                const label = `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
+                return (
+                  <button
+                    key={key}
+                    className={`filter-chip${selectedMonths.has(key) ? ' active' : ''}`}
+                    onClick={() => toggleMonth(key)}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <span className="filter-label">Kategori</span>
+            <div className="filter-chips">
+              {Object.entries(CATEGORIES).map(([key, c]) => (
+                <button
+                  key={key}
+                  className={`filter-chip${selectedCategories.has(key) ? ' active' : ''}`}
+                  onClick={() => toggleCategory(key)}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <span className="filter-label">Status</span>
+            <div className="filter-chips">
+              {['all', 'ongoing', 'done'].map((key) => (
+                <button
+                  key={key}
+                  className={`filter-chip${selectedStatus === key ? ' active' : ''}`}
+                  onClick={() => setSelectedStatus(key)}
+                >
+                  {key === 'all' ? 'Semua' : STATUSES[key].label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {!loaded ? (
         <p className="loading-text">Memuat board...</p>
       ) : (
         <div className="board-scroll">
           <div className="board-row">
             {COLUMNS.map((col) => {
-              const colCards = cards.filter((c) => c.columnId === col.id);
+              const colCards = filteredCards.filter((c) => c.columnId === col.id);
               return (
                 <div
                   key={col.id}
@@ -137,6 +240,8 @@ export default function BoardScreen({ project, onBack, onLogout }) {
                     {colCards.length === 0 && <p className="column-empty">Belum ada kartu</p>}
                     {colCards.map((card) => {
                       const p = PRIORITIES[card.priority] || PRIORITIES.medium;
+                      const cat = CATEGORIES[card.category || 'project'];
+                      const st = STATUSES[card.status || 'ongoing'];
                       return (
                         <div
                           key={card.id}
@@ -150,12 +255,16 @@ export default function BoardScreen({ project, onBack, onLogout }) {
                         >
                           <h4>{card.title}</h4>
                           {card.description && <p>{card.description}</p>}
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span className="priority-chip" style={{ background: p.bg, color: p.color }}>
-                              {p.label}
-                            </span>
-                            <span className="project-chip">{project.name}</span>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: card.deadline ? 6 : 0 }}>
+                            <span className="priority-chip" style={{ background: p.bg, color: p.color }}>{p.label}</span>
+                            <span className="priority-chip" style={{ background: cat.bg, color: cat.color }}>{cat.label}</span>
+                            <span className="priority-chip" style={{ background: st.bg, color: st.color }}>{st.label}</span>
                           </div>
+                          {card.deadline && (
+                            <p style={{ fontSize: 11, color: '#C96060', margin: 0 }}>
+                              Deadline {new Date(card.deadline).toLocaleDateString('id-ID')}
+                            </p>
+                          )}
                         </div>
                       );
                     })}
