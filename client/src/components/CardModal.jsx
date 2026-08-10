@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { PRIORITIES, CATEGORIES, STATUSES } from './BoardScreen.jsx';
+import { PRIORITIES, STATUSES } from './BoardScreen.jsx';
 
-export default function CardModal({ card, onSave, onDelete, onClose }) {
+export default function CardModal({ card, existingTags = [], onSave, onDelete, onClose }) {
   const [form, setForm] = useState(card);
 
   return (
@@ -11,6 +11,20 @@ export default function CardModal({ card, onSave, onDelete, onClose }) {
           <h2 className="f-display">{form.id ? 'Edit Kartu' : 'Kartu Baru'}</h2>
           <button onClick={onClose}>✕</button>
         </div>
+
+        <label className="field-label">Tag project (pilih yang ada atau ketik baru)</label>
+        <input
+          className="input"
+          list="tag-options"
+          placeholder="misal: FE, BE, CREDIT REPORT"
+          value={form.tag || ''}
+          onChange={(e) => setForm({ ...form, tag: e.target.value })}
+        />
+        <datalist id="tag-options">
+          {existingTags.map((t) => (
+            <option key={t} value={t} />
+          ))}
+        </datalist>
 
         <input
           className="input"
@@ -47,23 +61,6 @@ export default function CardModal({ card, onSave, onDelete, onClose }) {
               }}
             >
               {p.label}
-            </button>
-          ))}
-        </div>
-
-        <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-mid)', margin: '0 0 8px' }}>Kategori</p>
-        <div className="priority-picker" style={{ marginBottom: 16 }}>
-          {Object.entries(CATEGORIES).map(([key, c]) => (
-            <button
-              key={key}
-              onClick={() => setForm({ ...form, category: key })}
-              style={{
-                background: form.category === key ? c.bg : '#F7F2FA',
-                color: form.category === key ? c.color : 'var(--text-light)',
-                border: form.category === key ? `1px solid ${c.color}55` : '1px solid transparent',
-              }}
-            >
-              {c.label}
             </button>
           ))}
         </div>

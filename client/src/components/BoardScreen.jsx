@@ -17,12 +17,6 @@ export const PRIORITIES = {
   high: { label: 'High', color: '#C96060', bg: '#FBE3E3' },
 };
 
-export const CATEGORIES = {
-  project: { label: 'Project', color: '#8A6FB0', bg: '#EFE6F8' },
-  product: { label: 'Product', color: '#3E7FA8', bg: '#E1F0FB' },
-  bau: { label: 'BAU', color: '#B9873A', bg: '#FBF0D8' },
-};
-
 export const STATUSES = {
   ongoing: { label: 'Ongoing', color: '#B9873A', bg: '#FBF0D8' },
   done: { label: 'Done', color: '#5C9A72', bg: '#E4F4E8' },
@@ -38,7 +32,7 @@ export default function BoardScreen({ project, onBack, onLogout }) {
   const [dragId, setDragId] = useState(null);
 
   const [selectedMonths, setSelectedMonths] = useState(new Set());
-  const [selectedCategories, setSelectedCategories] = useState(new Set());
+  const [selectedTags, setSelectedTags] = useState(new Set());
   const [selectedStatus, setSelectedStatus] = useState('all'); // all | ongoing | done
 
   useEffect(() => {
@@ -65,6 +59,11 @@ export default function BoardScreen({ project, onBack, onLogout }) {
     }
   }
 
+  // Semua tag unik yang pernah dipakai di kartu-kartu project ini, buat dropdown & filter
+  const existingTags = Array.from(
+    new Set(cards.map((c) => (c.tag || '').trim()).filter(Boolean))
+  ).sort();
+
   function openAddModal(columnId) {
     setModalCard({
       columnId,
@@ -72,7 +71,7 @@ export default function BoardScreen({ project, onBack, onLogout }) {
       description: '',
       priority: 'medium',
       date: today(),
-      category: 'project',
+      tag: '',
       deadline: '',
       status: 'ongoing',
     });
@@ -139,18 +138,18 @@ export default function BoardScreen({ project, onBack, onLogout }) {
     next.has(key) ? next.delete(key) : next.add(key);
     setSelectedMonths(next);
   }
-  function toggleCategory(key) {
-    const next = new Set(selectedCategories);
+  function toggleTag(key) {
+    const next = new Set(selectedTags);
     next.has(key) ? next.delete(key) : next.add(key);
-    setSelectedCategories(next);
+    setSelectedTags(next);
   }
 
   const filteredCards = cards.filter((c) => {
     const monthKey = (c.date || c.createdAt || '').slice(0, 7);
     const monthMatch = selectedMonths.size === 0 || selectedMonths.has(monthKey);
-    const categoryMatch = selectedCategories.size === 0 || selectedCategories.has(c.category || 'project');
+    const tagMatch = selectedTags.size === 0 || selectedTags.has((c.tag || '').trim());
     const statusMatch = selectedStatus === 'all' || (c.status || 'ongoing') === selectedStatus;
-    return monthMatch && categoryMatch && statusMatch;
+    return monthMatch && tagMatch && statusMatch;
   });
 
   return (
@@ -184,20 +183,22 @@ export default function BoardScreen({ project, onBack, onLogout }) {
             </div>
           </div>
 
-          <div className="filter-group">
-            <span className="filter-label">Kategori</span>
-            <div className="filter-chips">
-              {Object.entries(CATEGORIES).map(([key, c]) => (
-                <button
-                  key={key}
-                  className={`filter-chip${selectedCategories.has(key) ? ' active' : ''}`}
-                  onClick={() => toggleCategory(key)}
-                >
-                  {c.label}
-                </button>
-              ))}
+          {existingTags.length > 0 && (
+            <div className="filter-group">
+              <span className="filter-label">Tag</span>
+              <div className="filter-chips">
+                {existingTags.map((tag) => (
+                  <button
+                    key={tag}
+                    className={`filter-chip${selectedTags.has(tag) ? ' active' : ''}`}
+                    onClick={() => toggleTag(tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="filter-group">
             <span className="filter-label">Status</span>
@@ -240,7 +241,6 @@ export default function BoardScreen({ project, onBack, onLogout }) {
                     {colCards.length === 0 && <p className="column-empty">Belum ada kartu</p>}
                     {colCards.map((card) => {
                       const p = PRIORITIES[card.priority] || PRIORITIES.medium;
-                      const cat = CATEGORIES[card.category || 'project'];
                       const st = STATUSES[card.status || 'ongoing'];
                       return (
                         <div
@@ -253,11 +253,13 @@ export default function BoardScreen({ project, onBack, onLogout }) {
                           onDrop={(e) => onDropOnCard(e, card)}
                           onClick={() => openEditModal(card)}
                         >
-                          <h4>{card.title}</h4>
+                          <h4>
+                            {card.tag && <span className="tag-prefix">[{card.tag}]</span>}
+                            {card.title}
+                          </h4>
                           {card.description && <p>{card.description}</p>}
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: card.deadline ? 6 : 0 }}>
                             <span className="priority-chip" style={{ background: p.bg, color: p.color }}>{p.label}</span>
-                            <span className="priority-chip" style={{ background: cat.bg, color: cat.color }}>{cat.label}</span>
                             <span className="priority-chip" style={{ background: st.bg, color: st.color }}>{st.label}</span>
                           </div>
                           {card.deadline && (
@@ -281,7 +283,7 @@ export default function BoardScreen({ project, onBack, onLogout }) {
       )}
 
       {modalCard && (
-        <CardModal card={modalCard} onSave={saveModal} onDelete={removeCard} onClose={closeModal} />
+        <CardModal card={modalCard} existingTags={existingTags} onSave={saveModal} onDelete={removeCard} onClose={closeModal} />
       )}
     </div>
   );

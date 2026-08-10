@@ -108,7 +108,7 @@ app.get('/api/projects/:id/cards', requireAuth, async (req, res) => {
 });
 
 app.post('/api/projects/:id/cards', requireAuth, async (req, res) => {
-  const { title, description, priority, columnId, date, category, deadline, status } = req.body;
+  const { title, description, priority, columnId, date, tag, deadline, status } = req.body;
   if (!title || !title.trim()) return res.status(400).json({ error: 'Judul kartu wajib diisi' });
   const data = await readData();
   const project = data.projects.find((p) => p.id === req.params.id);
@@ -121,7 +121,7 @@ app.post('/api/projects/:id/cards', requireAuth, async (req, res) => {
     description: description || '',
     priority: priority || 'medium',
     date: date || new Date().toISOString().slice(0, 10),
-    category: category || 'project',
+    tag: (tag || '').trim(),
     deadline: deadline || null,
     status: status || 'ongoing',
     createdAt: new Date().toISOString(),
@@ -131,18 +131,17 @@ app.post('/api/projects/:id/cards', requireAuth, async (req, res) => {
   res.json(card);
 });
 
-
 app.put('/api/cards/:id', requireAuth, async (req, res) => {
   const data = await readData();
   const card = data.cards.find((c) => c.id === req.params.id);
   if (!card) return res.status(404).json({ error: 'Kartu tidak ditemukan' });
-  const { title, description, priority, columnId, date, category, deadline, status } = req.body;
+  const { title, description, priority, columnId, date, tag, deadline, status } = req.body;
   if (title !== undefined) card.title = title;
   if (description !== undefined) card.description = description;
   if (priority !== undefined) card.priority = priority;
   if (columnId !== undefined) card.columnId = columnId;
   if (date !== undefined) card.date = date;
-  if (category !== undefined) card.category = category;
+  if (tag !== undefined) card.tag = tag.trim();
   if (deadline !== undefined) card.deadline = deadline;
   if (status !== undefined) card.status = status;
   await writeData(data);
