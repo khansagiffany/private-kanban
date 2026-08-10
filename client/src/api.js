@@ -36,6 +36,9 @@ export const api = {
   addCategory: (projectId, name) =>
     request(`/projects/${projectId}/categories`, { method: 'POST', body: JSON.stringify({ name }) }),
 
+  deleteCategory: (projectId, name) =>
+    request(`/projects/${projectId}/categories/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+
   getCards: (projectId) => request(`/projects/${projectId}/cards`),
   createCard: (projectId, card) =>
     request(`/projects/${projectId}/cards`, { method: 'POST', body: JSON.stringify(card) }),

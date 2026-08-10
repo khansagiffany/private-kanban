@@ -115,6 +115,17 @@ app.post('/api/projects/:id/categories', requireAuth, async (req, res) => {
   res.json(project);
 });
 
+// Hapus kategori dari daftar kategori project
+app.delete('/api/projects/:id/categories/:name', requireAuth, async (req, res) => {
+  const data = await readData();
+  const project = data.projects.find((p) => p.id === req.params.id);
+  if (!project) return res.status(404).json({ error: 'Project tidak ditemukan' });
+  const name = decodeURIComponent(req.params.name);
+  project.categories = (project.categories || []).filter((c) => c !== name);
+  await writeData(data);
+  res.json(project);
+});
+
 // ---------- CARDS ----------
 
 app.get('/api/projects/:id/cards', requireAuth, async (req, res) => {
