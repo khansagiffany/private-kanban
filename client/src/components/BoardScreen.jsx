@@ -71,6 +71,15 @@ export default function BoardScreen({ project, onBack, onLogout }) {
     setAddingCategory(false);
   }
 
+  async function removeCategory(cat) {
+    if (!confirm(`Hapus kategori "${cat}"? Kartu yang sudah pakai kategori ini tidak akan terhapus, cuma kategorinya hilang dari daftar pilihan.`)) return;
+    const updatedProject = await api.deleteCategory(project.id, cat);
+    setCategories(updatedProject.categories || []);
+    const next = new Set(selectedCategories);
+    next.delete(cat);
+    setSelectedCategories(next);
+  }
+
   function openAddModal(columnId) {
     setModalCard({
       columnId,
@@ -196,13 +205,19 @@ export default function BoardScreen({ project, onBack, onLogout }) {
             <span className="filter-label">Kategori</span>
             <div className="filter-chips">
               {categories.map((cat) => (
-                <button
+                <span
                   key={cat}
-                  className={`filter-chip${selectedCategories.has(cat) ? ' active' : ''}`}
-                  onClick={() => toggleCategory(cat)}
+                  className={`filter-chip tag-chip${selectedCategories.has(cat) ? ' active' : ''}`}
                 >
-                  {cat}
-                </button>
+                  <button className="tag-chip-label" onClick={() => toggleCategory(cat)}>{cat}</button>
+                  <button
+                    className="tag-chip-remove"
+                    title="Hapus kategori"
+                    onClick={(e) => { e.stopPropagation(); removeCategory(cat); }}
+                  >
+                    ×
+                  </button>
+                </span>
               ))}
 
               {addingCategory ? (
