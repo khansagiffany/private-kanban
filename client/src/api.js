@@ -33,6 +33,9 @@ export const api = {
   updateProject: (id, fields) => request(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(fields) }),
   deleteProject: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
 
+  addCategory: (projectId, name) =>
+    request(`/projects/${projectId}/categories`, { method: 'POST', body: JSON.stringify({ name }) }),
+
   getCards: (projectId) => request(`/projects/${projectId}/cards`),
   createCard: (projectId, card) =>
     request(`/projects/${projectId}/cards`, { method: 'POST', body: JSON.stringify(card) }),

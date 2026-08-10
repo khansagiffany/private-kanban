@@ -65,16 +65,14 @@ app.get('/api/projects', requireAuth, async (req, res) => {
 });
 
 app.post('/api/projects', requireAuth, async (req, res) => {
-  const { name, date, category, deadline, status } = req.body;
+  const { name, deadline } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: 'Nama project wajib diisi' });
   const data = await readData();
   const project = {
     id: genId('p_'),
     name: name.trim(),
-    date: date || new Date().toISOString().slice(0, 10),
-    category: category || 'project',
     deadline: deadline || null,
-    status: status || 'ongoing',
+    categories: [],
     createdAt: new Date().toISOString(),
   };
   data.projects.push(project);
@@ -83,11 +81,12 @@ app.post('/api/projects', requireAuth, async (req, res) => {
 });
 
 app.put('/api/projects/:id', requireAuth, async (req, res) => {
-  const { name } = req.body;
+  const { name, deadline } = req.body;
   const data = await readData();
   const project = data.projects.find((p) => p.id === req.params.id);
   if (!project) return res.status(404).json({ error: 'Project tidak ditemukan' });
   if (name && name.trim()) project.name = name.trim();
+  if (deadline !== undefined) project.deadline = deadline;
   await writeData(data);
   res.json(project);
 });
@@ -100,6 +99,22 @@ app.delete('/api/projects/:id', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Tambah kategori baru ke daftar kategori project (dipakai berkali-kali via dropdown di kartu)
+app.post('/api/projects/:id/categories', requireAuth, async (req, res) => {
+  const { name } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Nama kategori wajib diisi' });
+  const data = await readData();
+  const project = data.projects.find((p) => p.id === req.params.id);
+  if (!project) return res.status(404).json({ error: 'Project tidak ditemukan' });
+  if (!project.categories) project.categories = [];
+  const clean = name.trim();
+  if (!project.categories.includes(clean)) {
+    project.categories.push(clean);
+  }
+  await writeData(data);
+  res.json(project);
+});
+
 // ---------- CARDS ----------
 
 app.get('/api/projects/:id/cards', requireAuth, async (req, res) => {
@@ -108,7 +123,7 @@ app.get('/api/projects/:id/cards', requireAuth, async (req, res) => {
 });
 
 app.post('/api/projects/:id/cards', requireAuth, async (req, res) => {
-  const { title, description, priority, columnId, date, tag, deadline, status } = req.body;
+  const { title, description, priority, columnId, date, category, deadline, status } = req.body;
   if (!title || !title.trim()) return res.status(400).json({ error: 'Judul kartu wajib diisi' });
   const data = await readData();
   const project = data.projects.find((p) => p.id === req.params.id);
@@ -121,7 +136,7 @@ app.post('/api/projects/:id/cards', requireAuth, async (req, res) => {
     description: description || '',
     priority: priority || 'medium',
     date: date || new Date().toISOString().slice(0, 10),
-    tag: (tag || '').trim(),
+    category: (category || '').trim(),
     deadline: deadline || null,
     status: status || 'ongoing',
     createdAt: new Date().toISOString(),
@@ -135,13 +150,13 @@ app.put('/api/cards/:id', requireAuth, async (req, res) => {
   const data = await readData();
   const card = data.cards.find((c) => c.id === req.params.id);
   if (!card) return res.status(404).json({ error: 'Kartu tidak ditemukan' });
-  const { title, description, priority, columnId, date, tag, deadline, status } = req.body;
+  const { title, description, priority, columnId, date, category, deadline, status } = req.body;
   if (title !== undefined) card.title = title;
   if (description !== undefined) card.description = description;
   if (priority !== undefined) card.priority = priority;
   if (columnId !== undefined) card.columnId = columnId;
   if (date !== undefined) card.date = date;
-  if (tag !== undefined) card.tag = tag.trim();
+  if (category !== undefined) card.category = category.trim();
   if (deadline !== undefined) card.deadline = deadline;
   if (status !== undefined) card.status = status;
   await writeData(data);

@@ -31,8 +31,12 @@ export default function BoardScreen({ project, onBack, onLogout }) {
   const [modalCard, setModalCard] = useState(null);
   const [dragId, setDragId] = useState(null);
 
+  const [categories, setCategories] = useState(project.categories || []);
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
   const [selectedMonths, setSelectedMonths] = useState(new Set());
-  const [selectedTags, setSelectedTags] = useState(new Set());
+  const [selectedCategories, setSelectedCategories] = useState(new Set());
   const [selectedStatus, setSelectedStatus] = useState('all'); // all | ongoing | done
 
   useEffect(() => {
@@ -59,10 +63,13 @@ export default function BoardScreen({ project, onBack, onLogout }) {
     }
   }
 
-  // Semua tag unik yang pernah dipakai di kartu-kartu project ini, buat dropdown & filter
-  const existingTags = Array.from(
-    new Set(cards.map((c) => (c.tag || '').trim()).filter(Boolean))
-  ).sort();
+  async function addCategory() {
+    if (!newCategoryName.trim()) return;
+    const updatedProject = await api.addCategory(project.id, newCategoryName.trim());
+    setCategories(updatedProject.categories || []);
+    setNewCategoryName('');
+    setAddingCategory(false);
+  }
 
   function openAddModal(columnId) {
     setModalCard({
@@ -71,7 +78,7 @@ export default function BoardScreen({ project, onBack, onLogout }) {
       description: '',
       priority: 'medium',
       date: today(),
-      tag: '',
+      category: '',
       deadline: '',
       status: 'ongoing',
     });
@@ -138,18 +145,18 @@ export default function BoardScreen({ project, onBack, onLogout }) {
     next.has(key) ? next.delete(key) : next.add(key);
     setSelectedMonths(next);
   }
-  function toggleTag(key) {
-    const next = new Set(selectedTags);
+  function toggleCategory(key) {
+    const next = new Set(selectedCategories);
     next.has(key) ? next.delete(key) : next.add(key);
-    setSelectedTags(next);
+    setSelectedCategories(next);
   }
 
   const filteredCards = cards.filter((c) => {
     const monthKey = (c.date || c.createdAt || '').slice(0, 7);
     const monthMatch = selectedMonths.size === 0 || selectedMonths.has(monthKey);
-    const tagMatch = selectedTags.size === 0 || selectedTags.has((c.tag || '').trim());
+    const categoryMatch = selectedCategories.size === 0 || selectedCategories.has(c.category || '');
     const statusMatch = selectedStatus === 'all' || (c.status || 'ongoing') === selectedStatus;
-    return monthMatch && tagMatch && statusMatch;
+    return monthMatch && categoryMatch && statusMatch;
   });
 
   return (
@@ -162,43 +169,62 @@ export default function BoardScreen({ project, onBack, onLogout }) {
         <button className="btn-ghost" onClick={onLogout}>Keluar</button>
       </div>
 
-      {loaded && cards.length > 0 && (
+      {loaded && (
         <div className="filter-bar">
-          <div className="filter-group">
-            <span className="filter-label">Bulan</span>
-            <div className="filter-chips">
-              {availableMonths.map((key) => {
-                const [y, m] = key.split('-');
-                const label = `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
-                return (
-                  <button
-                    key={key}
-                    className={`filter-chip${selectedMonths.has(key) ? ' active' : ''}`}
-                    onClick={() => toggleMonth(key)}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {existingTags.length > 0 && (
+          {cards.length > 0 && (
             <div className="filter-group">
-              <span className="filter-label">Tag</span>
+              <span className="filter-label">Bulan</span>
               <div className="filter-chips">
-                {existingTags.map((tag) => (
-                  <button
-                    key={tag}
-                    className={`filter-chip${selectedTags.has(tag) ? ' active' : ''}`}
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag}
-                  </button>
-                ))}
+                {availableMonths.map((key) => {
+                  const [y, m] = key.split('-');
+                  const label = `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
+                  return (
+                    <button
+                      key={key}
+                      className={`filter-chip${selectedMonths.has(key) ? ' active' : ''}`}
+                      onClick={() => toggleMonth(key)}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
+
+          <div className="filter-group">
+            <span className="filter-label">Kategori</span>
+            <div className="filter-chips">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  className={`filter-chip${selectedCategories.has(cat) ? ' active' : ''}`}
+                  onClick={() => toggleCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+
+              {addingCategory ? (
+                <span style={{ display: 'flex', gap: 4 }}>
+                  <input
+                    autoFocus
+                    className="input"
+                    style={{ marginBottom: 0, padding: '4px 10px', fontSize: 12, width: 130 }}
+                    placeholder="Nama kategori"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addCategory()}
+                  />
+                  <button className="filter-chip" onClick={addCategory}>Simpan</button>
+                </span>
+              ) : (
+                <button className="filter-chip" onClick={() => setAddingCategory(true)}>
+                  + Tambah Kategori
+                </button>
+              )}
+            </div>
+          </div>
 
           <div className="filter-group">
             <span className="filter-label">Status</span>
@@ -254,7 +280,7 @@ export default function BoardScreen({ project, onBack, onLogout }) {
                           onClick={() => openEditModal(card)}
                         >
                           <h4>
-                            {card.tag && <span className="tag-prefix">[{card.tag}]</span>}
+                            {card.category && <span className="tag-prefix">[{card.category}]</span>}
                             {card.title}
                           </h4>
                           {card.description && <p>{card.description}</p>}
@@ -283,7 +309,7 @@ export default function BoardScreen({ project, onBack, onLogout }) {
       )}
 
       {modalCard && (
-        <CardModal card={modalCard} existingTags={existingTags} onSave={saveModal} onDelete={removeCard} onClose={closeModal} />
+        <CardModal card={modalCard} categories={categories} onSave={saveModal} onDelete={removeCard} onClose={closeModal} />
       )}
     </div>
   );

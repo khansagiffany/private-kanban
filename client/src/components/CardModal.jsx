@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PRIORITIES, STATUSES } from './BoardScreen.jsx';
 
-export default function CardModal({ card, existingTags = [], onSave, onDelete, onClose }) {
+export default function CardModal({ card, categories = [], onSave, onDelete, onClose }) {
   const [form, setForm] = useState(card);
 
   return (
@@ -12,19 +12,22 @@ export default function CardModal({ card, existingTags = [], onSave, onDelete, o
           <button onClick={onClose}>✕</button>
         </div>
 
-        <label className="field-label">Tag project (pilih yang ada atau ketik baru)</label>
-        <input
+        <label className="field-label">Kategori (opsional)</label>
+        <select
           className="input"
-          list="tag-options"
-          placeholder="misal: FE, BE, CREDIT REPORT"
-          value={form.tag || ''}
-          onChange={(e) => setForm({ ...form, tag: e.target.value })}
-        />
-        <datalist id="tag-options">
-          {existingTags.map((t) => (
-            <option key={t} value={t} />
+          value={form.category || ''}
+          onChange={(e) => setForm({ ...form, category: e.target.value })}
+        >
+          <option value="">Tanpa kategori</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
           ))}
-        </datalist>
+        </select>
+        {categories.length === 0 && (
+          <p style={{ fontSize: 11, color: 'var(--text-light)', margin: '-6px 0 12px' }}>
+            Belum ada kategori — tambahin dulu lewat tombol "+ Tambah Kategori" di board.
+          </p>
+        )}
 
         <input
           className="input"
